@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/chess-hero.jpg";
 
 const Hero = () => {
@@ -28,9 +29,11 @@ const Hero = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-          <Button size="lg" className="bg-gradient-to-r from-accent to-chess-accent hover:opacity-90 text-white font-semibold px-8 py-6 text-lg shadow-[var(--shadow-glow)]">
-            Start Playing
-          </Button>
+          <Link to="/play">
+            <Button size="lg" className="bg-gradient-to-r from-accent to-chess-accent hover:opacity-90 text-white font-semibold px-8 py-6 text-lg shadow-[var(--shadow-glow)]">
+              Start Playing
+            </Button>
+          </Link>
           <Button size="lg" variant="outline" className="border-2 px-8 py-6 text-lg">
             Learn More
           </Button>
