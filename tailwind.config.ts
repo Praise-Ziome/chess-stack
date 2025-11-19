@@ -57,6 +57,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        chess: {
+          board: "hsl(var(--chess-board))",
+          accent: "hsl(var(--chess-accent))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
