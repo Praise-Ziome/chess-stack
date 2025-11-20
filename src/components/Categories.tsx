@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Zap, Target, Clock, Trophy } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   {
@@ -33,6 +34,8 @@ const categories = [
 ];
 
 const Categories = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="py-20 px-4">
       <div className="container mx-auto">
@@ -47,6 +50,7 @@ const Categories = () => {
             return (
               <Card
                 key={category.name}
+                onClick={() => navigate(`/play/${category.name.toLowerCase()}`)}
                 className="p-6 hover:shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
               >
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
