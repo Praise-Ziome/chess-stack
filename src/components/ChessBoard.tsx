@@ -1,32 +1,39 @@
 import { useState } from "react";
-import { Chessboard } from "react-chessboard";
-import { Chess } from "chess.js";
+import { Chess, Square } from "chess.js";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RotateCcw, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const PIECE_SYMBOLS: Record<string, string> = {
+  'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
+  'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔'
+};
+
 const ChessBoard = () => {
   const [game, setGame] = useState(new Chess());
   const [gameHistory, setGameHistory] = useState<string[]>([]);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
   const { toast } = useToast();
 
-  const makeMove = (sourceSquare: string, targetSquare: string) => {
+  const makeMove = (from: Square, to: Square) => {
     try {
       const gameCopy = new Chess(game.fen());
       const move = gameCopy.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: "q", // Always promote to queen for simplicity
+        from,
+        to,
+        promotion: "q",
       });
 
       if (move === null) return false;
 
       setGame(gameCopy);
       setGameHistory([...gameHistory, move.san]);
+      setSelectedSquare(null);
+      setPossibleMoves([]);
 
-      // Check game status
       if (gameCopy.isCheckmate()) {
         toast({
           title: "Checkmate!",
@@ -50,14 +57,36 @@ const ChessBoard = () => {
     }
   };
 
-  const onDrop = ({ sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
-    if (!targetSquare) return false;
-    return makeMove(sourceSquare, targetSquare);
+  const handleSquareClick = (square: Square) => {
+    if (selectedSquare) {
+      if (possibleMoves.includes(square)) {
+        makeMove(selectedSquare, square);
+      } else {
+        const piece = game.get(square);
+        if (piece && piece.color === game.turn()) {
+          setSelectedSquare(square);
+          const moves = game.moves({ square, verbose: true });
+          setPossibleMoves(moves.map(m => m.to as Square));
+        } else {
+          setSelectedSquare(null);
+          setPossibleMoves([]);
+        }
+      }
+    } else {
+      const piece = game.get(square);
+      if (piece && piece.color === game.turn()) {
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true });
+        setPossibleMoves(moves.map(m => m.to as Square));
+      }
+    }
   };
 
   const resetGame = () => {
     setGame(new Chess());
     setGameHistory([]);
+    setSelectedSquare(null);
+    setPossibleMoves([]);
     toast({
       title: "New Game",
       description: "The board has been reset.",
@@ -71,16 +100,59 @@ const ChessBoard = () => {
         game.turn() === "w" ? "Black" : "White"
       } wins!`,
     });
-    setGame(new Chess()); // Reset after resignation
+    setGame(new Chess());
     setGameHistory([]);
+    setSelectedSquare(null);
+    setPossibleMoves([]);
   };
 
   const getTurnColor = () => (game.turn() === "w" ? "White" : "Black");
   const isGameOver = game.isGameOver();
 
+  const renderBoard = () => {
+    const squares: JSX.Element[] = [];
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+    ranks.forEach((rank, rankIndex) => {
+      files.forEach((file, fileIndex) => {
+        const square = (file + rank) as Square;
+        const piece = game.get(square);
+        const isLight = (rankIndex + fileIndex) % 2 === 0;
+        const isSelected = square === selectedSquare;
+        const isPossibleMove = possibleMoves.includes(square);
+
+        squares.push(
+          <div
+            key={square}
+            onClick={() => handleSquareClick(square)}
+            className={`
+              aspect-square flex items-center justify-center cursor-pointer text-5xl
+              transition-all duration-200 hover:opacity-80 relative
+              ${isLight ? 'bg-[hsl(var(--board-light))]' : 'bg-[hsl(var(--board-dark))]'}
+              ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}
+            `}
+          >
+            {piece && (
+              <span className={piece.color === 'w' ? 'text-foreground' : 'text-muted'}>
+                {PIECE_SYMBOLS[piece.type === piece.type.toUpperCase() ? piece.type : piece.type.toUpperCase()]}
+              </span>
+            )}
+            {isPossibleMove && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className={`w-4 h-4 rounded-full ${piece ? 'ring-4 ring-primary' : 'bg-primary/40'}`} />
+              </div>
+            )}
+          </div>
+        );
+      });
+    });
+
+    return squares;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Chess Board */}
       <div className="lg:col-span-2">
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -107,16 +179,12 @@ const ChessBoard = () => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto rounded-xl overflow-hidden shadow-[var(--shadow-card)]">
-            <Chessboard
-              options={{
-                position: game.fen(),
-                onPieceDrop: onDrop,
-              }}
-            />
+          <div className="max-w-2xl mx-auto">
+            <div className="grid grid-cols-8 gap-0 border-4 border-border rounded-lg overflow-hidden shadow-[var(--shadow-card)]">
+              {renderBoard()}
+            </div>
           </div>
 
-          {/* Game Status */}
           <div className="mt-6 p-4 rounded-lg bg-muted">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -140,7 +208,6 @@ const ChessBoard = () => {
         </Card>
       </div>
 
-      {/* Move History */}
       <div className="lg:col-span-1">
         <Card className="p-6 h-full">
           <h3 className="text-xl font-bold mb-4">Move History</h3>
@@ -167,7 +234,6 @@ const ChessBoard = () => {
             )}
           </div>
 
-          {/* FEN Display */}
           <div className="mt-6 p-3 rounded-lg bg-muted">
             <p className="text-xs text-muted-foreground mb-1">Current FEN:</p>
             <code className="text-xs break-all">{game.fen()}</code>
