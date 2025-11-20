@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Zap, Target, Clock, Trophy } from "lucide-react";
+import { Zap, Target, Clock, Trophy, Infinity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const categories = [
@@ -13,23 +13,30 @@ const categories = [
   {
     icon: Target,
     name: "Blitz",
-    time: "3-5 min",
+    time: "5 min",
     description: "Balanced speed and strategy",
     color: "from-blue-500 to-cyan-500",
   },
   {
     icon: Clock,
     name: "Rapid",
-    time: "10-15 min",
+    time: "10 min",
     description: "More time to plan your moves",
     color: "from-green-500 to-emerald-500",
   },
   {
     icon: Trophy,
     name: "Classical",
-    time: "30+ min",
+    time: "30 min",
     description: "Deep strategic battles",
     color: "from-purple-500 to-pink-500",
+  },
+  {
+    icon: Infinity,
+    name: "Untimed",
+    time: "No time limit",
+    description: "Play without time pressure",
+    color: "from-amber-500 to-yellow-500",
   },
 ];
 
@@ -44,7 +51,7 @@ const Categories = () => {
           Choose your preferred time control and compete
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {categories.map((category) => {
             const Icon = category.icon;
             return (

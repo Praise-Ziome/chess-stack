@@ -18,9 +18,8 @@ const Hero = () => {
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-          Master Your
           <span className="block bg-gradient-to-r from-accent to-chess-accent bg-clip-text text-transparent">
-            Chess Game
+            StackChess
           </span>
         </h1>
         
