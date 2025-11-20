@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Chess, Square } from "chess.js";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,65 @@ const PIECE_SYMBOLS: Record<string, string> = {
   'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔'
 };
 
-const ChessBoard = () => {
+interface ChessBoardProps {
+  timeInMinutes: number;
+}
+
+const ChessBoard = ({ timeInMinutes }: ChessBoardProps) => {
   const [game, setGame] = useState(new Chess());
   const [gameHistory, setGameHistory] = useState<string[]>([]);
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<Square[]>([]);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [whiteTime, setWhiteTime] = useState(timeInMinutes * 60);
+  const [blackTime, setBlackTime] = useState(timeInMinutes * 60);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!gameStarted || timeInMinutes === 0 || game.isGameOver()) return;
+
+    const interval = setInterval(() => {
+      if (game.turn() === 'w') {
+        setWhiteTime((prev) => {
+          if (prev <= 0) {
+            toast({
+              title: "Time's up!",
+              description: "Black wins on time!",
+              variant: "destructive",
+            });
+            return 0;
+          }
+          return prev - 1;
+        });
+      } else {
+        setBlackTime((prev) => {
+          if (prev <= 0) {
+            toast({
+              title: "Time's up!",
+              description: "White wins on time!",
+              variant: "destructive",
+            });
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [gameStarted, game, timeInMinutes, toast]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const makeMove = (from: Square, to: Square) => {
+    if (!gameStarted && timeInMinutes > 0) {
+      setGameStarted(true);
+    }
+
     try {
       const gameCopy = new Chess(game.fen());
       const move = gameCopy.move({
@@ -58,6 +109,8 @@ const ChessBoard = () => {
   };
 
   const handleSquareClick = (square: Square) => {
+    if (timeInMinutes > 0 && !gameStarted) return;
+
     if (selectedSquare) {
       if (possibleMoves.includes(square)) {
         makeMove(selectedSquare, square);
@@ -87,6 +140,9 @@ const ChessBoard = () => {
     setGameHistory([]);
     setSelectedSquare(null);
     setPossibleMoves([]);
+    setGameStarted(false);
+    setWhiteTime(timeInMinutes * 60);
+    setBlackTime(timeInMinutes * 60);
     toast({
       title: "New Game",
       description: "The board has been reset.",
@@ -104,10 +160,13 @@ const ChessBoard = () => {
     setGameHistory([]);
     setSelectedSquare(null);
     setPossibleMoves([]);
+    setGameStarted(false);
+    setWhiteTime(timeInMinutes * 60);
+    setBlackTime(timeInMinutes * 60);
   };
 
   const getTurnColor = () => (game.turn() === "w" ? "White" : "Black");
-  const isGameOver = game.isGameOver();
+  const isGameOver = game.isGameOver() || (timeInMinutes > 0 && (whiteTime <= 0 || blackTime <= 0));
 
   const renderBoard = () => {
     const squares: JSX.Element[] = [];
@@ -154,6 +213,32 @@ const ChessBoard = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
+        {timeInMinutes > 0 && (
+          <Card className="p-4 mb-4">
+            <div className="flex justify-between items-center">
+              <div className="text-center flex-1">
+                <div className="text-sm text-muted-foreground mb-1">White</div>
+                <div className={`text-3xl font-bold ${game.turn() === 'w' && gameStarted ? 'text-accent' : ''}`}>
+                  {formatTime(whiteTime)}
+                </div>
+              </div>
+              <div className="text-center flex-1">
+                <div className="text-sm text-muted-foreground mb-1">Black</div>
+                <div className={`text-3xl font-bold ${game.turn() === 'b' && gameStarted ? 'text-accent' : ''}`}>
+                  {formatTime(blackTime)}
+                </div>
+              </div>
+            </div>
+            {!gameStarted && (
+              <div className="mt-4 text-center">
+                <Button onClick={() => setGameStarted(true)} className="w-full">
+                  Start Game
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
+        
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">

@@ -6,10 +6,11 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Wifi, Cpu } from "lucide-react";
 
 const categoryTimes = {
-  bullet: "1 min",
-  blitz: "3-5 min",
-  rapid: "10-15 min",
-  classical: "30+ min",
+  bullet: 1,
+  blitz: 5,
+  rapid: 10,
+  classical: 30,
+  untimed: 0,
 };
 
 const Play = () => {
@@ -17,7 +18,8 @@ const Play = () => {
   const [gameMode, setGameMode] = useState<"online" | "computer" | null>(null);
 
   const categoryName = category ? category.charAt(0).toUpperCase() + category.slice(1) : "";
-  const timeControl = category ? categoryTimes[category as keyof typeof categoryTimes] : "";
+  const timeInMinutes = category ? categoryTimes[category as keyof typeof categoryTimes] : 0;
+  const timeControl = timeInMinutes === 0 ? "Untimed" : `${timeInMinutes} min`;
 
   if (!gameMode) {
     return (
@@ -90,7 +92,7 @@ const Play = () => {
           <div className="w-24" />
         </div>
 
-        <ChessBoard />
+        <ChessBoard timeInMinutes={timeInMinutes} />
       </div>
     </div>
   );
