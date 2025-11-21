@@ -186,7 +186,7 @@ const ChessBoard = ({ timeInMinutes }: ChessBoardProps) => {
             key={square}
             onClick={() => handleSquareClick(square)}
             className={`
-              aspect-square flex items-center justify-center cursor-pointer text-5xl
+              aspect-square flex items-center justify-center cursor-pointer text-3xl sm:text-4xl md:text-5xl
               transition-all duration-200 hover:opacity-80 relative
               ${isLight ? 'bg-[hsl(var(--board-light))]' : 'bg-[hsl(var(--board-dark))]'}
               ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}
